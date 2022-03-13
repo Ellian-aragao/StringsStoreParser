@@ -10,7 +10,7 @@ public class ItemParser extends Parser<Item> {
 
 	@Override
 	protected boolean isNotValidInput(String[] inputs) {
-		return super.isNotValidInput(inputs) || itemsFieldsLenght.equals(inputs.length);
+		return super.isNotValidInput(inputs) || !itemsFieldsLenght.equals(inputs.length);
 	}
 
 	@Override
