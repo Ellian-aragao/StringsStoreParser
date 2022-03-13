@@ -1,11 +1,7 @@
 package aragao.ellian.com.github;
 
-import aragao.ellian.com.github.models.Cliente;
-import aragao.ellian.com.github.models.Item;
-import aragao.ellian.com.github.models.Vendas;
-import aragao.ellian.com.github.models.Vendedor;
+import aragao.ellian.com.github.parser.*;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class Main {
@@ -25,40 +21,9 @@ public class Main {
 		listStrings.forEach(dataToParse -> {
 			System.out.println(dataToParse);
 			final var strings = dataToParse.split(delimitador);
-			if (Vendedor.getId().equals(strings[0])) {
-				final var vendedor = Vendedor.builder()
-						.withCpf(strings[1])
-						.withName(strings[2])
-						.withSalary(strings[3])
-						.build();
-				System.out.println(vendedor);
-			}
-			if (Cliente.getId().equals(strings[0])) {
-				final var cliente = Cliente.builder()
-						.withCnpj(strings[1])
-						.withName(strings[2])
-						.withBusinessArea(strings[3])
-						.build();
-				System.out.println(cliente);
-			}
-			if (Vendas.getId().equals(strings[0])) {
-				final var items = Arrays.stream(strings[2].replaceAll("[\\[\\]]", "").split(","))
-						.map(item -> {
-							final var itensAttributes = item.split("-");
-							return Item.builder()
-									.withId(itensAttributes[0])
-									.withQuantity(itensAttributes[1])
-									.withPrice(itensAttributes[2])
-									.build();
-						})
-						.toList();
-				final var vendas = Vendas.builder()
-						.withSaleId(strings[1])
-						.withItems(items)
-						.withSalesmanName(strings[3])
-						.build();
-				System.out.println(vendas);
-			}
+			new VendaParser(new ItemsParser(new ItemParser())).parse(strings).ifPresent(System.out::println);
+			new ClienteParser().parse(strings).ifPresent(System.out::println);
+			new VendedorParser().parse(strings).ifPresent(System.out::println);
 		});
 	}
 }
