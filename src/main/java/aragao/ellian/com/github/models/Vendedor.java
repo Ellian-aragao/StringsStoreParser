@@ -6,12 +6,6 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 public record Vendedor(String cpf, String name, BigDecimal salary) {
-	private static final String id = ModelsIds.VENDEDOR.getId();
-
-	public static String getId() {
-		return id;
-	}
-
 	public static VendedorBuilder builder() {
 		return new VendedorBuilder();
 	}

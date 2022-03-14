@@ -5,11 +5,6 @@ import aragao.ellian.com.github.ModelsIds;
 import java.util.List;
 
 public record Vendas(String saleId, List<Item> items, String salesmanName) {
-	private static final String id = ModelsIds.VENDA.getId();
-	public static String getId() {
-		return id;
-	}
-
 	public static VendasBuilder builder() {
 		return new VendasBuilder();
 	}

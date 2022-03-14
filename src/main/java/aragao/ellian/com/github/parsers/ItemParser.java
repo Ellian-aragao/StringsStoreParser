@@ -1,23 +1,25 @@
-package aragao.ellian.com.github.parser;
+package aragao.ellian.com.github.parsers;
 
 import aragao.ellian.com.github.models.Item;
 
 import java.util.Optional;
+import java.util.regex.Pattern;
 
-public class ItemParser extends Parser<Item> {
+public class ItemParser implements Parser<Item> {
 
-	private final Integer itemsFieldsLenght = Item.class.getDeclaredFields().length;
+	private static final Pattern PATTERN = ParsersEnum.ITEM.getPattern();
 
 	@Override
-	protected boolean isNotValidInput(String[] inputs) {
-		return super.isNotValidInput(inputs) || !itemsFieldsLenght.equals(inputs.length);
+	public boolean isNotValidInput(String inputs) {
+		return !PATTERN.matcher(inputs).matches();
 	}
 
 	@Override
-	public Optional<Item> parse(String[] inputs) {
-		if (isNotValidInput(inputs)) {
+	public Optional<Item> parse(String input) {
+		if (isNotValidInput(input)) {
 			return Optional.empty();
 		}
+		final var inputs = input.split("-");
 		final var item = Item.builder()
 				.withId(inputs[0])
 				.withQuantity(inputs[1])

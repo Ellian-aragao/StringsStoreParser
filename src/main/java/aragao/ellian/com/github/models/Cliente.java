@@ -3,12 +3,6 @@ package aragao.ellian.com.github.models;
 import aragao.ellian.com.github.ModelsIds;
 
 public record Cliente(String cnpj, String name, String BusinessArea) {
-	private static final String id = ModelsIds.CLIENTE.getId();
-
-	public static String getId() {
-		return id;
-	}
-
 	public static ClienteBuilder builder() {
 		return new ClienteBuilder();
 	}
