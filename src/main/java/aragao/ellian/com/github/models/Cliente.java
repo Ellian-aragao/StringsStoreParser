@@ -1,7 +1,5 @@
 package aragao.ellian.com.github.models;
 
-import aragao.ellian.com.github.ModelsIds;
-
 public record Cliente(String cnpj, String name, String BusinessArea) {
 	public static ClienteBuilder builder() {
 		return new ClienteBuilder();

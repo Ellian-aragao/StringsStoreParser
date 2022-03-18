@@ -1,7 +1,9 @@
-package aragao.ellian.com.github.parsers;
+package aragao.ellian.com.github.parsers.impl;
 
 import aragao.ellian.com.github.models.Item;
 import aragao.ellian.com.github.models.Vendas;
+import aragao.ellian.com.github.parsers.Parser;
+import aragao.ellian.com.github.parsers.ParsersEnum;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -25,7 +27,7 @@ public class VendaParser implements Parser<Vendas> {
 		if (isNotValidInput(input)) {
 			return Optional.empty();
 		}
-		final var inputs = input.split(ParsersEnum.getDelimiter());
+		final var inputs = input.split(ParsersEnum.getDELIMITER());
 		final var items = itemsParser.parse(inputs[2]).orElseThrow();
 		final var vendas = Vendas.builder()
 				.withSaleId(inputs[1])

@@ -1,7 +1,5 @@
 package aragao.ellian.com.github.models;
 
-import aragao.ellian.com.github.ModelsIds;
-
 import java.math.BigDecimal;
 import java.util.Objects;
 

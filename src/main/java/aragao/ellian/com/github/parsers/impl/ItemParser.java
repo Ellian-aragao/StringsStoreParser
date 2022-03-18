@@ -1,6 +1,8 @@
-package aragao.ellian.com.github.parsers;
+package aragao.ellian.com.github.parsers.impl;
 
 import aragao.ellian.com.github.models.Item;
+import aragao.ellian.com.github.parsers.Parser;
+import aragao.ellian.com.github.parsers.ParsersEnum;
 
 import java.util.Optional;
 import java.util.regex.Pattern;

@@ -14,11 +14,11 @@ public enum ParsersEnum {
 	VENDA("003ç\\d*ç\\[((\\d+|-){2}(\\d+|.)*[,|\\]])ç\\w*"),
 	ITEM("((\\d+)-){2}(\\d+)(.(\\d){2})?");
 
-	private static final String delimiter = "ç";
+	private static final String DELIMITER = "ç";
 	private final String regex;
 
-	public static String getDelimiter() {
-		return delimiter;
+	public static String getDELIMITER() {
+		return DELIMITER;
 	}
 
 	public Pattern getPattern() {

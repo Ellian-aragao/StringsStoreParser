@@ -1,7 +1,6 @@
-package aragao.ellian.com.github.parsers;
+package aragao.ellian.com.github.chains;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public abstract class Middleware {
 	private Middleware next;
@@ -11,11 +10,11 @@ public abstract class Middleware {
 		return next;
 	}
 
-	public abstract Optional<?> check(String dataString);
+	public abstract boolean check(String dataString);
 
-	protected Optional<?> checkNext(String dataString) {
+	protected boolean checkNext(String dataString) {
 		if (Objects.isNull(next)) {
-			return Optional.empty();
+			return true;
 		}
 		return next.check(dataString);
 	}

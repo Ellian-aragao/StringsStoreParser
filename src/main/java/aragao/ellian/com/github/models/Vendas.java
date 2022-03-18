@@ -1,7 +1,5 @@
 package aragao.ellian.com.github.models;
 
-import aragao.ellian.com.github.ModelsIds;
-
 import java.util.List;
 
 public record Vendas(String saleId, List<Item> items, String salesmanName) {
