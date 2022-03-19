@@ -1,12 +1,15 @@
 package aragao.ellian.com.github;
 
 import aragao.ellian.com.github.database.Database;
+import aragao.ellian.com.github.database.ModelsRepository;
 import aragao.ellian.com.github.parsers.FactoryParsers;
 import aragao.ellian.com.github.parsers.impl.*;
 import aragao.ellian.com.github.queues.LineToParseQueue;
 import aragao.ellian.com.github.queues.impl.LineToParseQueueImpl;
+import aragao.ellian.com.github.services.GenerateReportService;
 import aragao.ellian.com.github.services.ParseLineProducerService;
 import aragao.ellian.com.github.services.ReadFileAndProduceService;
+import aragao.ellian.com.github.services.impl.GenerateReportServiceImpl;
 import aragao.ellian.com.github.services.impl.ParseLineProducerServiceImpl;
 import aragao.ellian.com.github.services.impl.ReadFilesWithBlockingIOServiceImpl;
 
@@ -22,8 +25,9 @@ public class Main {
 	private static final ReadFileAndProduceService readFilesWithBlockingIOService = new ReadFilesWithBlockingIOServiceImpl(
 			new LineToParseQueueImpl()
 	);
-	private static final Database database = new Database();
-	private static final ParseLineProducerService PARSE_LINE_PRODUCER_SERVICE = new ParseLineProducerServiceImpl(factoryParsers, database, database, database);
+	private static final ModelsRepository database = new Database();
+	private static final GenerateReportService generateReportService = new GenerateReportServiceImpl(database);
+	private static final ParseLineProducerService PARSE_LINE_PRODUCER_SERVICE = new ParseLineProducerServiceImpl(factoryParsers, database);
 	private static final LineToParseQueue lineToParseQueue = new LineToParseQueueImpl();
 
 	private static final List<String> listStrings = List.of(
@@ -55,5 +59,6 @@ public class Main {
 			listen = lineToParseQueue.listen();
 		}
 		System.out.println(database);
+		System.out.println("REPORT:\n" + generateReportService.generateReport());
 	}
 }

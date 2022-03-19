@@ -8,4 +8,6 @@ public interface VendedorRepository {
 	Vendedor saveVendedor(Vendedor vendedor);
 
 	List<Vendedor> findAllVendedor();
+
+	Long countVendedores();
 }
