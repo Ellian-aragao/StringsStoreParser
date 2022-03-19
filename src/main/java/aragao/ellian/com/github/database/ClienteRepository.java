@@ -8,4 +8,6 @@ public interface ClienteRepository {
 	Cliente saveCliente(Cliente cliente);
 
 	List<Cliente> findAllClientes();
+
+	Long countClientes();
 }

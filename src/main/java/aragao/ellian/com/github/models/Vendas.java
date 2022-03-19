@@ -1,8 +1,16 @@
 package aragao.ellian.com.github.models;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record Vendas(String saleId, List<Item> items, String salesmanName) {
+
+	public BigDecimal precoDaVenda() {
+		return items.stream()
+				.map(item -> item.price().multiply(BigDecimal.valueOf(item.quantity())))
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+
 	public static VendasBuilder builder() {
 		return new VendasBuilder();
 	}

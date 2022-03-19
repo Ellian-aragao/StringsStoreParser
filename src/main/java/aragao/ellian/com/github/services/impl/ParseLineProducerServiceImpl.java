@@ -1,8 +1,6 @@
 package aragao.ellian.com.github.services.impl;
 
-import aragao.ellian.com.github.database.ClienteRepository;
-import aragao.ellian.com.github.database.VendasRepository;
-import aragao.ellian.com.github.database.VendedorRepository;
+import aragao.ellian.com.github.database.ModelsRepository;
 import aragao.ellian.com.github.models.Cliente;
 import aragao.ellian.com.github.models.Vendas;
 import aragao.ellian.com.github.models.Vendedor;
@@ -15,11 +13,7 @@ public class ParseLineProducerServiceImpl implements ParseLineProducerService {
 
 	private final FactoryParsers factoryParsers;
 
-	private final VendasRepository vendasRepository;
-
-	private final VendedorRepository vendedorRepository;
-
-	private final ClienteRepository clienteRepository;
+	private final ModelsRepository modelsRepository;
 
 	@Override
 	public boolean parseLineAndPersist(String line) {
@@ -31,15 +25,15 @@ public class ParseLineProducerServiceImpl implements ParseLineProducerService {
 
 	private Boolean patternMatchingObjectWithModels(Object data) {
 		if (data instanceof Cliente cliente) {
-			clienteRepository.saveCliente(cliente);
+			modelsRepository.saveCliente(cliente);
 			return true;
 		}
 		if (data instanceof Vendas vendas) {
-			vendasRepository.saveVendas(vendas);
+			modelsRepository.saveVendas(vendas);
 			return true;
 		}
 		if (data instanceof Vendedor vendedor) {
-			vendedorRepository.saveVendedor(vendedor);
+			modelsRepository.saveVendedor(vendedor);
 			return true;
 		}
 		return false;

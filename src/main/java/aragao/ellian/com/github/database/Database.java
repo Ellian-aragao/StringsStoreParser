@@ -6,8 +6,10 @@ import aragao.ellian.com.github.models.Vendedor;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-public class Database implements ClienteRepository, VendedorRepository, VendasRepository {
+public class Database implements ModelsRepository {
 
 	private static final List<Cliente> CLIENTE_LIST = new LinkedList<>();
 
@@ -27,6 +29,11 @@ public class Database implements ClienteRepository, VendedorRepository, VendasRe
 	}
 
 	@Override
+	public Long countClientes() {
+		return (long) CLIENTE_LIST.size();
+	}
+
+	@Override
 	public Vendedor saveVendedor(Vendedor vendedor) {
 		VENDEDOR_LIST.add(vendedor);
 		return vendedor;
@@ -35,6 +42,11 @@ public class Database implements ClienteRepository, VendedorRepository, VendasRe
 	@Override
 	public List<Vendedor> findAllVendedor() {
 		return VENDEDOR_LIST;
+	}
+
+	@Override
+	public Long countVendedores() {
+		return (long) VENDEDOR_LIST.size();
 	}
 
 	@Override
@@ -47,6 +59,23 @@ public class Database implements ClienteRepository, VendedorRepository, VendasRe
 	public List<Vendas> findAllVendas() {
 		return VENDAS_LIST;
 	}
+
+	@Override
+	public Optional<Vendas> findVendaMaisCara() {
+		return VENDAS_LIST
+				.stream()
+				.reduce((venda1, venda2) -> venda1.precoDaVenda().compareTo(venda2.precoDaVenda()) > 0 ? venda1 : venda2);
+	}
+
+	@Override
+	public Optional<Vendedor> findPiorVendedor() {
+		final var nomeDosVendedores = VENDEDOR_LIST.stream()
+				.map(Vendedor::name)
+				.collect(Collectors.toUnmodifiableSet());
+
+		return Optional.empty();
+	}
+
 	@Override
 	public String toString() {
 		return "Database [CLIENTE_LIST=" + CLIENTE_LIST + ", VENDAS_LIST=" + VENDAS_LIST + ", VENDEDOR_LIST="
