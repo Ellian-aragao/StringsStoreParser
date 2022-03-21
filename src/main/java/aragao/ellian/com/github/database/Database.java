@@ -3,12 +3,17 @@ package aragao.ellian.com.github.database;
 import aragao.ellian.com.github.models.Cliente;
 import aragao.ellian.com.github.models.Vendas;
 import aragao.ellian.com.github.models.Vendedor;
+import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class Database implements ModelsRepository {
 
 	private static final List<Cliente> CLIENTE_LIST = new LinkedList<>();
@@ -70,10 +75,16 @@ public class Database implements ModelsRepository {
 	@Override
 	public Optional<Vendedor> findPiorVendedor() {
 		final var nomeDosVendedores = VENDEDOR_LIST.stream()
-				.map(Vendedor::name)
-				.collect(Collectors.toUnmodifiableSet());
-
-		return Optional.empty();
+				.collect(Collectors.toMap(Vendedor::name, Function.identity()));
+		return VENDAS_LIST
+				.stream()
+				.collect(Collectors.groupingBy(Vendas::salesmanName, Collectors
+						.reducing(BigDecimal.ZERO, Vendas::precoDaVenda, BigDecimal::add)))
+				.entrySet()
+				.stream()
+				.min(Map.Entry.comparingByValue())
+				.map(Map.Entry::getKey)
+				.map(nomeDosVendedores::get);
 	}
 
 	@Override
