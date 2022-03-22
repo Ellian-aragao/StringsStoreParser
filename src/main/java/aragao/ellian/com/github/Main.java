@@ -1,69 +1,77 @@
 package aragao.ellian.com.github;
 
-import aragao.ellian.com.github.database.Database;
-import aragao.ellian.com.github.database.ModelsRepository;
-import aragao.ellian.com.github.models.Report;
-import aragao.ellian.com.github.parsers.FactoryParsers;
-import aragao.ellian.com.github.parsers.impl.*;
-import aragao.ellian.com.github.queues.LineToParseQueue;
-import aragao.ellian.com.github.queues.impl.LineToParseQueueImpl;
-import aragao.ellian.com.github.services.GenerateReportService;
-import aragao.ellian.com.github.services.ParseLineProducerService;
-import aragao.ellian.com.github.services.ReadFileAndProduceService;
-import aragao.ellian.com.github.services.WriteFileReportService;
-import aragao.ellian.com.github.services.impl.GenerateReportServiceImpl;
-import aragao.ellian.com.github.services.impl.ParseLineProducerServiceImpl;
-import aragao.ellian.com.github.services.impl.ReadFilesWithBlockingIOServiceImpl;
-import aragao.ellian.com.github.services.impl.WriteFileReportServiceImpl;
+import aragao.ellian.com.github.config.ApplicationProperties;
+import aragao.ellian.com.github.core.repository.ModelsRepository;
+import aragao.ellian.com.github.core.usecases.*;
+import aragao.ellian.com.github.core.usecases.impl.GenerateReportImpl;
+import aragao.ellian.com.github.core.usecases.impl.LineModelStringListenerImpl;
+import aragao.ellian.com.github.core.usecases.impl.ProducerLineModelStringImpl;
+import aragao.ellian.com.github.core.usecases.impl.ReadFileModelsImpl;
+import aragao.ellian.com.github.core.usecases.ports.ProducerStringLineDataPort;
+import aragao.ellian.com.github.core.usecases.ports.ReaderFilePort;
+import aragao.ellian.com.github.infra.adapters.database.DatabaseInMemory;
+import aragao.ellian.com.github.infra.adapters.files.BlockingIOReadFiles;
+import aragao.ellian.com.github.infra.adapters.parsers.FactoryParsers;
+import aragao.ellian.com.github.infra.adapters.parsers.impl.*;
+import aragao.ellian.com.github.infra.adapters.queues.LineToParseQueueImpl;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 
+@Slf4j
 public class Main {
 
-	private static final FactoryParsers factoryParsers = new FactoryParsers(
+	public static final ReaderFilePort BLOCKING_IO_READ_FILES;
+	private static final FactoryParsers FACTORY_PARSERS = new FactoryParsers(
 			new VendedorParser(),
 			new ClienteParser(),
 			new VendaParser(new ListItemsParser(new ItemParser()))
 	);
-	private static final ReadFileAndProduceService readFilesWithBlockingIOService = new ReadFilesWithBlockingIOServiceImpl(
-			new LineToParseQueueImpl()
-	);
-	private static final ModelsRepository database = new Database();
-	private static final GenerateReportService generateReportService = new GenerateReportServiceImpl(database);
-	private static final ParseLineProducerService PARSE_LINE_PRODUCER_SERVICE = new ParseLineProducerServiceImpl(factoryParsers, database);
-	private static final LineToParseQueue lineToParseQueue = new LineToParseQueueImpl();
-	private static WriteFileReportService writeFileReportService = new WriteFileReportServiceImpl();
+	private static final ModelsRepository DATABASE_IN_MEMORY = new DatabaseInMemory();
+	private static final GenerateReport GENERATE_REPORT = new GenerateReportImpl(DATABASE_IN_MEMORY, DATABASE_IN_MEMORY, DATABASE_IN_MEMORY);
+	private static final LineModelStringListener LINE_MODEL_STRING_LISTENER = new LineModelStringListenerImpl(FACTORY_PARSERS, DATABASE_IN_MEMORY::saveCliente, DATABASE_IN_MEMORY::saveVendedor, DATABASE_IN_MEMORY::saveVendas);
+	private static final ListenerStringLineData LISTENER_STRING_LINE_DATA;
+	private static final ReadFileModels READ_FILE_MODELS;
+	private static final ProducerLineModelString PRODUCER_LINE_MODEL_STRING;
 
-	private static final List<String> listStrings = List.of(
-			"001ç1234567891234çPedroç50000",
-			"001ç3245678865434çPauloç40000.99",
-			"002ç2345675434544345çJose da SilvaçRural",
-			"002ç2345675433444345çEduardo PereiraçRural",
-			"003ç10ç[1-10-100,2-30-2.50,3-40-3.10]çPedro",
-			"003ç08ç[1-34-10,2-33-1.50,3-40-0.10]çPaulo"
-	);
-	private static final String fileName = System.getenv("HOMEPATH") + "/data/in/in.dat";
 
-	public static void routine1() {
-		final var listStrings = readFilesWithBlockingIOService.readFile(fileName);
-		listStrings.forEach(dataToParse -> {
-			System.out.println(dataToParse);
-			final var parse = factoryParsers.whichParser(dataToParse);
-			parse.map(parser -> parser.parse(dataToParse)).ifPresent(System.out::println);
-		});
+	static {
+		ApplicationProperties.initApplicationProperties();
+		BLOCKING_IO_READ_FILES = new BlockingIOReadFiles(ApplicationProperties.getInstance());
+		final var lineToParseQueue = new LineToParseQueueImpl();
+		LISTENER_STRING_LINE_DATA = lineToParseQueue;
+		PRODUCER_LINE_MODEL_STRING = new ProducerLineModelStringImpl(lineToParseQueue);
+		READ_FILE_MODELS = new ReadFileModelsImpl(new BlockingIOReadFiles(ApplicationProperties.getInstance()), PRODUCER_STRING_LINE_DATA);
 	}
 
 	public static void main(String[] args) {
-		if (!readFilesWithBlockingIOService.readFileAndPublish(fileName)) {
-			throw new RuntimeException("erro na fila");
+		while (true) {
+			consumeFilesProcess();
+			consumeQueueData();
+			consumeDatabaseToProduceReport();
 		}
-		var listen = lineToParseQueue.listen();
+	}
+
+	private static void consumeDatabaseToProduceReport() {
+		final var report = GENERATE_REPORT.generateReport();
+		READ_FILE_MODELS.read("flat_out_file");
+	}
+
+	private static void consumeQueueData() {
+		var listen = LISTENER_STRING_LINE_DATA.listen();
 		while (listen.isPresent()) {
-			listen.ifPresent(PARSE_LINE_PRODUCER_SERVICE::parseLineAndPersist);
-			listen = lineToParseQueue.listen();
+			listen.ifPresent(LINE_MODEL_STRING_LISTENER::onLineModelString);
+			listen = LISTENER_STRING_LINE_DATA.listen();
 		}
-		final var report = generateReportService.generateReport();
-		System.out.println(report);
-		writeFileReportService.writeFileReport(fileName, report);
+	}
+
+	private static void consumeFilesProcess() {
+		final var instance = ApplicationProperties.getInstance();
+		final var listFiles = new File(instance.pathInput())
+				.listFiles(file -> file.getName().endsWith(instance.extentionFiles()));
+		Arrays.stream(listFiles).forEach(file -> BLOCKING_IO_READ_FILES
+				.readFileAndProcess(file.getName(), PRODUCER_STRING_LINE_DATA::publish));
 	}
 }
