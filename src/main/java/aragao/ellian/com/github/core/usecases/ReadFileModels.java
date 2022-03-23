@@ -1,5 +1,7 @@
 package aragao.ellian.com.github.core.usecases;
 
+import java.util.List;
+
 public interface ReadFileModels {
-	boolean read(String fileName);
+	List<String> read(String fileName);
 }

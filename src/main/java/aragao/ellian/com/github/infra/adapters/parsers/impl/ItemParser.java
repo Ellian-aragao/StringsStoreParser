@@ -2,18 +2,28 @@ package aragao.ellian.com.github.infra.adapters.parsers.impl;
 
 import aragao.ellian.com.github.core.models.Item;
 import aragao.ellian.com.github.core.usecases.ports.ParserPort;
-import aragao.ellian.com.github.infra.adapters.parsers.ParsersEnum;
+import aragao.ellian.com.github.infra.adapters.parsers.PatternStringLineDataEnum;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class ItemParser implements ParserPort<Item> {
 
-	private static final Pattern PATTERN = ParsersEnum.ITEM.getPattern();
+	private final Pattern itemPattern;
+
+	private ItemParser(Pattern itemPattern) {
+		this.itemPattern = itemPattern;
+	}
+
+
+	public static ItemParser of(PatternStringLineDataEnum item) {
+		return new ItemParser(Objects.requireNonNull(item).getPattern());
+	}
 
 	@Override
 	public boolean isNotValidInput(String inputs) {
-		return !PATTERN.matcher(inputs).matches();
+		return !itemPattern.matcher(inputs).matches();
 	}
 
 	@Override

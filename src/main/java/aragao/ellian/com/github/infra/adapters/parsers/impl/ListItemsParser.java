@@ -2,22 +2,30 @@ package aragao.ellian.com.github.infra.adapters.parsers.impl;
 
 import aragao.ellian.com.github.core.models.Item;
 import aragao.ellian.com.github.core.usecases.ports.ParserPort;
-import lombok.RequiredArgsConstructor;
+import aragao.ellian.com.github.infra.adapters.parsers.PatternStringLineDataEnum;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-@RequiredArgsConstructor
 public class ListItemsParser implements ParserPort<List<Item>> {
 
-	private static final Pattern PATTERN_LIST = Pattern.compile("[\\[\\]]");
+	private final Pattern patternList;
 	private final ParserPort<Item> itemParser;
+
+	private ListItemsParser(Pattern patternList, ParserPort<Item> itemParser) {
+		this.patternList = patternList;
+		this.itemParser = itemParser;
+	}
+
+	public static ListItemsParser of(PatternStringLineDataEnum patternList, ParserPort<Item> itemParser) {
+		return new ListItemsParser(patternList.getPattern(), itemParser);
+	}
 
 	@Override
 	public boolean isNotValidInput(String inputs) {
-		return false;
+		return patternList.matcher(inputs).matches();
 	}
 
 	@Override
@@ -25,7 +33,7 @@ public class ListItemsParser implements ParserPort<List<Item>> {
 		if (isNotValidInput(inputs)) {
 			return Optional.empty();
 		}
-		final var splitedStringItems = PATTERN_LIST.matcher(inputs).replaceAll("").split(",");
+		final var splitedStringItems = patternList.matcher(inputs).replaceAll("").split(",");
 		final var items = Arrays.stream(splitedStringItems)
 				.map(itemParser::parse)
 				.filter(Optional::isPresent)

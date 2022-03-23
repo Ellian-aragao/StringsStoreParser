@@ -2,18 +2,27 @@ package aragao.ellian.com.github.infra.adapters.parsers.impl;
 
 import aragao.ellian.com.github.core.models.Vendedor;
 import aragao.ellian.com.github.core.usecases.ports.ParserPort;
-import aragao.ellian.com.github.infra.adapters.parsers.ParsersEnum;
+import aragao.ellian.com.github.infra.adapters.parsers.PatternStringLineDataEnum;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class VendedorParser implements ParserPort<Vendedor> {
 
-	private static final Pattern PATTERN = ParsersEnum.VENDEDOR.getPattern();
+	private final Pattern vendedorPattern;
+
+	private VendedorParser(Pattern vendedorPattern) {
+		this.vendedorPattern = vendedorPattern;
+	}
+
+	public static VendedorParser of(PatternStringLineDataEnum vendedor) {
+		return new VendedorParser(Objects.requireNonNull(vendedor).getPattern());
+	}
 
 	@Override
 	public boolean isNotValidInput(String inputs) {
-		return !PATTERN.matcher(inputs).matches();
+		return !vendedorPattern.matcher(inputs).matches();
 	}
 
 	@Override
@@ -21,7 +30,7 @@ public class VendedorParser implements ParserPort<Vendedor> {
 		if (isNotValidInput(input)) {
 			return Optional.empty();
 		}
-		final var inputs = input.split(ParsersEnum.getDELIMITER());
+		final var inputs = input.split(PatternStringLineDataEnum.getDELIMITER());
 		final var vendedor = Vendedor.builder()
 				.withCpf(inputs[1])
 				.withName(inputs[2])
