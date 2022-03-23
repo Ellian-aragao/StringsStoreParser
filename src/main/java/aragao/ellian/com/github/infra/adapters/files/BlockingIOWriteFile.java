@@ -11,7 +11,9 @@ import java.util.function.Consumer;
 
 @Slf4j
 @RequiredArgsConstructor
-public class BlockingIOWriteReportServiceImpl implements WriterFilePort {
+public class BlockingIOWriteFile implements WriterFilePort {
+
+	private final ApplicationProperties applicationProperties;
 
 	@Override
 	public boolean writeFileReport(String fileOutput, Consumer<Writer> writerConsumer) {
@@ -34,8 +36,6 @@ public class BlockingIOWriteReportServiceImpl implements WriterFilePort {
 		}
 		return true;
 	}
-
-	private final ApplicationProperties applicationProperties;
 
 	private boolean existsFileOutputDir() {
 		final var file = new File(applicationProperties.pathOutput());

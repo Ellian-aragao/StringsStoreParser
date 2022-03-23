@@ -4,7 +4,7 @@ import aragao.ellian.com.github.core.exceptions.InvalidModelParsedException;
 import aragao.ellian.com.github.core.models.Cliente;
 import aragao.ellian.com.github.core.models.Vendas;
 import aragao.ellian.com.github.core.models.Vendedor;
-import aragao.ellian.com.github.core.usecases.LineModelStringListener;
+import aragao.ellian.com.github.core.usecases.ListenerLineModelString;
 import aragao.ellian.com.github.core.usecases.ports.DataLineStringParserPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 
 @Slf4j
 @RequiredArgsConstructor
-public class LineModelStringListenerImpl implements LineModelStringListener {
+public class ListenerLineModelStringImpl implements ListenerLineModelString {
 
 	private final DataLineStringParserPort lineStringParser;
 
@@ -23,9 +23,9 @@ public class LineModelStringListenerImpl implements LineModelStringListener {
 
 	private final Consumer<Vendas> vendasConsumer;
 
-
 	@Override
 	public void onLineModelString(String lineModelString) {
+		log.debug("onLineModelString: {}", lineModelString);
 		lineStringParser.whichParserFromDataLineModel(lineModelString)
 				.flatMap(parser -> parser.parse(lineModelString))
 				.ifPresent(this::patternMatchingObjectWithModels);

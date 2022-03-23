@@ -1,87 +1,90 @@
 package aragao.ellian.com.github.infra.adapters.database;
 
-import aragao.ellian.com.github.core.repository.ModelsRepository;
 import aragao.ellian.com.github.core.models.Cliente;
 import aragao.ellian.com.github.core.models.Vendas;
 import aragao.ellian.com.github.core.models.Vendedor;
+import aragao.ellian.com.github.core.repository.ModelsRepository;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class DatabaseInMemory implements ModelsRepository {
-	private static final Set<Cliente> CLIENTE_SET = new HashSet<>();
+	private final Set<Cliente> clienteSet = new HashSet<>();
 
-	private static final Set<Vendas> VENDAS_SET = new HashSet<>();
+	private final Set<Vendas> vendasSet = new HashSet<>();
 
-	private static final Set<Vendedor> VENDEDOR_SET = new HashSet<>();
+	private final Set<Vendedor> vendedorSet = new HashSet<>();
 
 	@Override
 	public Cliente saveCliente(Cliente cliente) {
-		synchronized (CLIENTE_SET) {
-			CLIENTE_SET.add(cliente);
+		synchronized (clienteSet) {
+			clienteSet.add(cliente);
 			return cliente;
 		}
 	}
 
 	@Override
 	public Set<Cliente> findAllClientes() {
-		synchronized (CLIENTE_SET) {
-			return CLIENTE_SET;
+		synchronized (clienteSet) {
+			return clienteSet;
 		}
 	}
 
 	@Override
 	public Long countClientes() {
-		synchronized (CLIENTE_SET) {
-			return (long) CLIENTE_SET.size();
+		synchronized (clienteSet) {
+			return (long) clienteSet.size();
 		}
 	}
 
 	@Override
 	public Vendedor saveVendedor(Vendedor vendedor) {
-		synchronized (VENDEDOR_SET) {
-			VENDEDOR_SET.add(vendedor);
+		synchronized (vendedorSet) {
+			vendedorSet.add(vendedor);
 			return vendedor;
 		}
 	}
 
 	@Override
 	public Set<Vendedor> findAllVendedor() {
-		synchronized (VENDEDOR_SET) {
-			return VENDEDOR_SET;
+		synchronized (vendedorSet) {
+			return vendedorSet;
 		}
 	}
 
 	@Override
 	public Long countVendedores() {
-		synchronized (VENDEDOR_SET) {
-			return (long) VENDEDOR_SET.size();
+		synchronized (vendedorSet) {
+			return (long) vendedorSet.size();
 		}
 	}
 
 	@Override
 	public Vendas saveVendas(Vendas vendas) {
-		synchronized (VENDAS_SET) {
-			VENDAS_SET.add(vendas);
+		synchronized (vendasSet) {
+			vendasSet.add(vendas);
 			return vendas;
 		}
 	}
 
 	@Override
 	public Set<Vendas> findAllVendas() {
-		synchronized (VENDAS_SET) {
-			return VENDAS_SET;
+		synchronized (vendasSet) {
+			return vendasSet;
 		}
 	}
 
 	@Override
 	public Optional<Vendas> findVendaMaisCara() {
-		synchronized (VENDAS_SET) {
-			return VENDAS_SET
+		synchronized (vendasSet) {
+			return vendasSet
 					.stream()
 					.reduce((venda1, venda2) -> venda1.precoDaVenda().compareTo(venda2.precoDaVenda()) > 0 ? venda1 : venda2);
 		}
@@ -89,9 +92,9 @@ public class DatabaseInMemory implements ModelsRepository {
 
 	@Override
 	public synchronized Optional<Vendedor> findPiorVendedor() {
-		final var nomeDosVendedores = VENDEDOR_SET.stream()
+		final var nomeDosVendedores = vendedorSet.stream()
 				.collect(Collectors.toMap(Vendedor::name, Function.identity()));
-		return VENDAS_SET
+		return vendasSet
 				.stream()
 				.collect(Collectors.groupingBy(Vendas::salesmanName, Collectors
 						.reducing(BigDecimal.ZERO, Vendas::precoDaVenda, BigDecimal::add)))
@@ -104,7 +107,7 @@ public class DatabaseInMemory implements ModelsRepository {
 
 	@Override
 	public synchronized String toString() {
-		return "DatabaseInMemory [CLIENTE_LIST=" + CLIENTE_SET + ", VENDAS_LIST=" + VENDAS_SET + ", VENDEDOR_LIST="
-				+ VENDEDOR_SET + "]";
+		return "DatabaseInMemory [CLIENTE_LIST=" + clienteSet + ", VENDAS_LIST=" + vendasSet + ", VENDEDOR_LIST="
+				+ vendedorSet + "]";
 	}
 }
