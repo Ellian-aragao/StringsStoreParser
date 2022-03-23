@@ -1,7 +1,6 @@
 package aragao.ellian.com.github;
 
 import aragao.ellian.com.github.config.ApplicationProperties;
-import aragao.ellian.com.github.core.usecases.*;
 import aragao.ellian.com.github.core.usecases.impl.*;
 import aragao.ellian.com.github.infra.adapters.database.DatabaseInMemory;
 import aragao.ellian.com.github.infra.adapters.files.BlockingIOReadFiles;
@@ -24,20 +23,20 @@ public class InitializerState {
 		ApplicationProperties.initApplicationProperties();
 		final var repository = new DatabaseInMemory();
 		final var factoryParsers = initializeFactoryParsers();
-		GenerateReport generateReport = new GenerateReportImpl(repository, repository, repository);
-		ListenerLineModelString listenerLineModelString = new ListenerLineModelStringImpl(
+		final var generateReport = new GenerateReportImpl(repository, repository, repository);
+		final var listenerLineModelString = new ListenerLineModelStringImpl(
 				factoryParsers,
 				repository::saveCliente,
 				repository::saveVendedor,
 				repository::saveVendas
 		);
 		final var lineToParseQueue = new LineToParseQueueImpl();
-		ProducerLineModelString producerLineModelString = new ProducerLineModelStringImpl(lineToParseQueue);
+		final var producerLineModelString = new ProducerLineModelStringImpl(lineToParseQueue);
 		final var applicationProperties = ApplicationProperties.getInstance();
-		ReadFileModels readFileModels = new ReadFileModelsImpl(new BlockingIOReadFiles(applicationProperties));
-		WriteFileReport writeFileReport = new WriteFileReportImpl(new BlockingIOWriteFile(applicationProperties));
+		final var readFileModels = new ReadFileModelsImpl(new BlockingIOReadFiles(applicationProperties));
+		final var writeFileReport = new WriteFileReportImpl(new BlockingIOWriteFile(applicationProperties));
 
-		ListFilesAvailableEntrypoint listFilesAvailableEntrypoint = new ListFilesAvailableEntrypoint(applicationProperties);
+		final var listFilesAvailableEntrypoint = new ListFilesAvailableEntrypoint(applicationProperties);
 
 		consumeFilesAndProduceToQueue = new ConsumeFilesAndProduceToQueue(
 				listFilesAvailableEntrypoint,
