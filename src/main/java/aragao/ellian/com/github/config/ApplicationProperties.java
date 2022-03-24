@@ -1,6 +1,6 @@
 package aragao.ellian.com.github.config;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -9,9 +9,9 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-@Slf4j
 public class ApplicationProperties {
 
+	private static final Logger log = org.slf4j.LoggerFactory.getLogger(ApplicationProperties.class);
 	private static ApplicationProperties application;
 	private final String pathInput;
 	private final String pathOutput;
@@ -46,9 +46,11 @@ public class ApplicationProperties {
 	}
 
 	private static ApplicationProperties readApplicationPropertiesToApplication() {
+		log.debug("Reading application properties");
 		try (var resourceAsStream = new FileReader("src/main/java/resource/application.properties")) {
 			final var properties = new Properties();
 			properties.load(resourceAsStream);
+			log.debug("Reading application properties successfully: {}", properties);
 			final var hasEnvPattern = Pattern.compile("(.*)(\\$\\{(.*)})(.*)");
 			final var splitEnvPattern = Pattern.compile("([${}])");
 			final var processFileEndsName = properties.getProperty("process.file.ends", ".done.dat");

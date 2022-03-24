@@ -14,18 +14,21 @@ import aragao.ellian.com.github.infra.entrypoint.ListFilesAvailableEntrypoint;
 import aragao.ellian.com.github.services.ConsumeFilesAndProduceToQueue;
 import aragao.ellian.com.github.services.GenerateReportFromDatabase;
 import aragao.ellian.com.github.services.ListenQueueAndPersists;
+import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.concurrent.Executors;
 
 public class ApplicationContext {
 
+	private static final Logger log = org.slf4j.LoggerFactory.getLogger(ApplicationContext.class);
 	private ThreadExecutorsManager threadExecutorsManager;
 
 	private List<Runnable> services;
 
 
 	public void initializeContexts() {
+		log.info("Initializing contexts");
 		ApplicationProperties.initApplicationProperties();
 		final var applicationProperties = ApplicationProperties.getInstance();
 
@@ -68,10 +71,12 @@ public class ApplicationContext {
 		);
 
 		services = List.of(consumeFilesAndProduceToQueue, listenQueueAndPersists, generateReportFromDatabase);
+		log.trace("Contexts initialized");
 	}
 
 
 	private FactoryParsers initializeFactoryParsers() {
+		log.trace("Initializing factory parsers");
 		final var itemParser = ItemParser.of(PatternStringLineDataEnum.ITEM);
 		final var listItemsParser = ListItemsParser.of(PatternStringLineDataEnum.LISTA_ITEMS, itemParser);
 		return FactoryParsers.builder()
@@ -83,10 +88,12 @@ public class ApplicationContext {
 	}
 
 	public void startServices() {
+		log.info("Starting services");
 		services.forEach(Runnable::run);
 	}
 
 	public void stopServices() {
+		log.info("Stopping services");
 		threadExecutorsManager.shutdownExecutors();
 	}
 }
