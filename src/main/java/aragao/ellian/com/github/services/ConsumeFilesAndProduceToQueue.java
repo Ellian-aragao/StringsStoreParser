@@ -3,27 +3,38 @@ package aragao.ellian.com.github.services;
 import aragao.ellian.com.github.core.usecases.ProducerLineModelString;
 import aragao.ellian.com.github.core.usecases.ReadFileModels;
 import aragao.ellian.com.github.infra.entrypoint.ListFilesAvailableEntrypoint;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
-public class ConsumeFilesAndProduceToQueue {
+@Slf4j
+public class ConsumeFilesAndProduceToQueue implements Runnable {
+
+	private final ExecutorService executorService;
 	private final ListFilesAvailableEntrypoint listFilesAvailableEntrypoint;
 	private final ReadFileModels readFileModels;
 	private final ProducerLineModelString producerLineModelString;
 
-	public ConsumeFilesAndProduceToQueue(ListFilesAvailableEntrypoint listFilesAvailableEntrypoint, ReadFileModels readFileModels, ProducerLineModelString producerLineModelString) {
+	public ConsumeFilesAndProduceToQueue(ExecutorService executorService, ListFilesAvailableEntrypoint listFilesAvailableEntrypoint, ReadFileModels readFileModels, ProducerLineModelString producerLineModelString) {
+		this.executorService = Objects.requireNonNull(executorService);
 		this.listFilesAvailableEntrypoint = Objects.requireNonNull(listFilesAvailableEntrypoint);
 		this.readFileModels = Objects.requireNonNull(readFileModels);
 		this.producerLineModelString = Objects.requireNonNull(producerLineModelString);
 	}
 
+	@Override
+	public void run() {
+		consumeFilesAndProduceToQueue();
+	}
 
-	public void consumeFilesAndProduceToQueue() {
+	private void consumeFilesAndProduceToQueue() {
 		listFilesAvailableEntrypoint.findFilesToParse()
-				.stream()
-				.map(readFileModels::read)
-				.flatMap(List::stream)
-				.forEach(producerLineModelString::produceLineStringModel);
+				.forEach(this::initProcessReadFileAsync);
+	}
+
+	private void initProcessReadFileAsync(String file) {
+		executorService.execute(() -> readFileModels.read(file)
+				.forEach(producerLineModelString::produceLineStringModel));
 	}
 }

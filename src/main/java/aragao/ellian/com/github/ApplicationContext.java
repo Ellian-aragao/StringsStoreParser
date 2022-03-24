@@ -1,6 +1,7 @@
 package aragao.ellian.com.github;
 
 import aragao.ellian.com.github.config.ApplicationProperties;
+import aragao.ellian.com.github.config.ThreadExecutorsManager;
 import aragao.ellian.com.github.core.usecases.impl.*;
 import aragao.ellian.com.github.infra.adapters.database.DatabaseInMemory;
 import aragao.ellian.com.github.infra.adapters.files.BlockingIOReadFiles;
@@ -14,44 +15,61 @@ import aragao.ellian.com.github.services.ConsumeFilesAndProduceToQueue;
 import aragao.ellian.com.github.services.GenerateReportFromDatabase;
 import aragao.ellian.com.github.services.ListenQueueAndPersists;
 
-public class InitializerState {
-	private final ConsumeFilesAndProduceToQueue consumeFilesAndProduceToQueue;
-	private final ListenQueueAndPersists listenQueueAndPersists;
-	private final GenerateReportFromDatabase generateReportFromDatabase;
+import java.util.List;
+import java.util.concurrent.Executors;
 
-	InitializerState() {
+public class ApplicationContext {
+
+	private ThreadExecutorsManager threadExecutorsManager;
+
+	private List<Runnable> services;
+
+
+	public void initializeContexts() {
 		ApplicationProperties.initApplicationProperties();
+		final var applicationProperties = ApplicationProperties.getInstance();
+
+		threadExecutorsManager = ThreadExecutorsManager.builder()
+				.scheduledExecutorService(Executors.newScheduledThreadPool(applicationProperties.threadsToScheduledProcess()))
+				.executorServiceBlockinIo(Executors.newFixedThreadPool(applicationProperties.threadsToIO()))
+				.build();
+
 		final var repository = new DatabaseInMemory();
-		final var factoryParsers = initializeFactoryParsers();
 		final var generateReport = new GenerateReportImpl(repository, repository, repository);
 		final var listenerLineModelString = new ListenerLineModelStringImpl(
-				factoryParsers,
+				initializeFactoryParsers(),
 				repository::saveCliente,
 				repository::saveVendedor,
 				repository::saveVendas
 		);
 		final var lineToParseQueue = new LineToParseQueueImpl();
 		final var producerLineModelString = new ProducerLineModelStringImpl(lineToParseQueue);
-		final var applicationProperties = ApplicationProperties.getInstance();
+
 		final var readFileModels = new ReadFileModelsImpl(new BlockingIOReadFiles(applicationProperties));
 		final var writeFileReport = new WriteFileReportImpl(new BlockingIOWriteFile(applicationProperties));
 
 		final var listFilesAvailableEntrypoint = new ListFilesAvailableEntrypoint(applicationProperties);
 
-		consumeFilesAndProduceToQueue = new ConsumeFilesAndProduceToQueue(
+		final var consumeFilesAndProduceToQueue = new ConsumeFilesAndProduceToQueue(
+				threadExecutorsManager.executorServiceBlockinIo(),
 				listFilesAvailableEntrypoint,
 				readFileModels,
 				producerLineModelString
 		);
-		listenQueueAndPersists = new ListenQueueAndPersists(
+		final var listenQueueAndPersists = new ListenQueueAndPersists(
+				threadExecutorsManager.scheduledExecutorService(),
 				lineToParseQueue,
 				listenerLineModelString
 		);
-		generateReportFromDatabase = new GenerateReportFromDatabase(
+		final var generateReportFromDatabase = new GenerateReportFromDatabase(
+				threadExecutorsManager.scheduledExecutorService(),
 				generateReport,
 				writeFileReport
 		);
+
+		services = List.of(consumeFilesAndProduceToQueue, listenQueueAndPersists, generateReportFromDatabase);
 	}
+
 
 	private FactoryParsers initializeFactoryParsers() {
 		final var itemParser = ItemParser.of(PatternStringLineDataEnum.ITEM);
@@ -64,15 +82,11 @@ public class InitializerState {
 				.build();
 	}
 
-	public ConsumeFilesAndProduceToQueue getConsumeFilesAndProduceToQueue() {
-		return consumeFilesAndProduceToQueue;
+	public void startServices() {
+		services.forEach(Runnable::run);
 	}
 
-	public ListenQueueAndPersists getListenQueueAndPersists() {
-		return listenQueueAndPersists;
-	}
-
-	public GenerateReportFromDatabase getGenerateReportFromDatabase() {
-		return generateReportFromDatabase;
+	public void stopServices() {
+		threadExecutorsManager.shutdownExecutors();
 	}
 }

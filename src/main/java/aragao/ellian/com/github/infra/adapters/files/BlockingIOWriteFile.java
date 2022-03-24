@@ -23,9 +23,9 @@ public class BlockingIOWriteFile implements WriterFilePort {
 		Objects.requireNonNull(writerConsumer);
 		try {
 			final var pathname = applicationProperties.pathOutput() + "/" + fileOutput + applicationProperties.processFileEndsName() + applicationProperties.extentionFiles();
-			existsFileOutputDir();
 			log.debug("Pathname: {}", pathname);
-			try (var out = new FileWriter(pathname, true)) {
+			final var fileToWrite = createIfNotExistsFileOutputDir(pathname);
+			try (var out = new FileWriter(fileToWrite, true)) {
 				try (var printWriter = new PrintWriter(out)) {
 					writerConsumer.accept(printWriter);
 				}
@@ -37,11 +37,17 @@ public class BlockingIOWriteFile implements WriterFilePort {
 		return true;
 	}
 
-	private boolean existsFileOutputDir() {
-		final var file = new File(applicationProperties.pathOutput());
-		if (!file.exists()) {
-			return file.mkdir();
+	private File createIfNotExistsFileOutputDir(String pathName) {
+		final var pathOutput = new File(applicationProperties.pathOutput());
+		final var fileToWrite = new File(pathName);
+		if (!pathOutput.exists()) {
+			pathOutput.mkdir();
+			try {
+				fileToWrite.createNewFile();
+			} catch (IOException e) {
+				throw new RuntimeException("Error creating file to write", e);
+			}
 		}
-		return false;
+		return fileToWrite;
 	}
 }
