@@ -6,7 +6,7 @@
 
     <groupId>ellian-aragao.com.github</groupId>
     <artifactId>ParserString</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <properties>
         <maven.compiler.source>16</maven.compiler.source>
@@ -31,6 +31,17 @@
     <build>
         <plugins>
             <plugin>
+                <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>aragao.ellian.com.github.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
